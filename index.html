@@ -1,0 +1,178 @@
+<html>
+  <head>
+    <script
+      src="https://code.jquery.com/jquery-3.6.3.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <title>Hola</title>
+  </head>
+  <body>
+    <input
+      type="text"
+      name="monto_pagar"
+      id="monto_pagar"
+      value="0.00"
+      style="text-align: right"
+    />
+    <table>
+      <thead>
+        <th style="border: 1px solid" width="5%">&nbsp;</th>
+        <th style="border: 1px solid" width="20%">Vencimiento</th>
+        <th style="border: 1px solid" width="20%">VALOR C-4</th>
+        <th style="border: 1px solid" width="20%">Saldo</th>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <td style="border: 1px solid" colspan="6">
+            <input
+              type="text"
+              name="mto_anticipo"
+              id="mto_anticipo"
+              value="0.00"
+              style="text-align: right"
+            />
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        // Write Javascript code!
+        let mto_abonar = 1000000;
+        let a_montos = [
+          {
+            id: 1,
+            descripcion: 'TEXT 1',
+            deuda: 202300,
+            abono: 0.0,
+            pagado: 0,
+            saldo: 202300,
+            checked: false,
+          },
+          {
+            id: 2,
+            descripcion: 'TEXT 2',
+            deuda: 457555,
+            abono: 0.0,
+            pagado: 0,
+            saldo: 457555,
+            checked: false,
+          },
+          {
+            id: 3,
+            descripcion: 'TEXT 3',
+            deuda: 555968,
+            abono: 0.0,
+            pagado: 0,
+            saldo: 555968,
+            checked: false,
+          },
+          {
+            id: 4,
+            descripcion: 'TEXT 4',
+            deuda: 1346872,
+            abono: 0.0,
+            pagado: 0,
+            saldo: 1346872,
+            checked: false,
+          },
+        ];
+        a_montos.forEach((item) => {
+          let td_check = $('<td/>').append(
+            $("<input type='checkbox' name='' id='' value />")
+          );
+          let td_desc = $('<td/>', { text: item.descripcion });
+          let td_deuda = $('<td/>', { text: item.deuda });
+          let td_abono = $('<td/>').append(
+            $("<input type='text' name='abono[]' value='" + item.abono + "' />")
+          );
+          $('tbody').append(
+            $('<tr/>').append(td_check, td_desc, td_deuda, td_abono)
+          );
+        });
+
+        $(':checkbox').bind('click', function () {
+          let monto_anticipo = $('#mto_anticipo').val();
+          monto_anticipo = parseFloat(monto_anticipo);
+          let monto_nuevo = $(this)
+            .parents('tr')
+            .children('td:nth-child(4)')
+            .text();
+          monto_nuevo = parseFloat(monto_nuevo);
+          if (!$(this).is(':checked')) {
+            monto_anticipo =
+              !isNaN(monto_nuevo) && !isNaN(monto_anticipo)
+                ? monto_nuevo + monto_anticipo
+                : monto_anticipo;
+            $(this).parents('tr').children('td:nth-child(4)').text('0');
+          } else {
+            let monto_pagar = $(this)
+              .parents('tr')
+              .children('td:nth-child(3)')
+              .text();
+            console.log(monto_pagar);
+            //TODO: SI EL ANTICIPO ES MAYOR A LA DEUDA SE TOTALIZA EL ABONO
+            if (monto_anticipo >= monto_pagar) {
+              $(this)
+                .parents('tr')
+                .children('td:nth-child(4)')
+                .text(monto_pagar);
+              monto_anticipo = monto_anticipo - monto_pagar;
+            } else {
+              $(this)
+                .parents('tr')
+                .children('td:nth-child(4)')
+                .text(monto_anticipo);
+              monto_anticipo = 0;
+            }
+          }
+          $('#mto_anticipo').val(monto_anticipo);
+        });
+
+        $('#monto_pagar').bind('blur', function () {
+          let monto_pagar = $(this).val();
+          if (!isNaN(monto_pagar) && monto_pagar > 0) {
+            a_montos.forEach((item, index) => {
+              if (monto_pagar == 0) {
+                var input_checked = $('tbody > tr')
+                  .eq(index)
+                  .children('td:nth-child(1)');
+                $(input_checked)
+                  .find(':checkbox')
+                  .attr({ disabled: 'disabled' });
+                return;
+              }
+              if (monto_pagar >= item.deuda) {
+                monto_pagar = monto_pagar - item.deuda;
+                $('tbody > tr')
+                  .eq(index)
+                  .children('td:nth-child(4)')
+                  .text(item.deuda);
+                var input_checked = $('tbody > tr')
+                  .eq(index)
+                  .children('td:nth-child(1)');
+                $(input_checked).find(':checkbox').attr({ checked: 'checked' });
+                a_montos[index].saldo = 0;
+                a_montos[index].checked = true;
+              } else {
+                $('tbody > tr')
+                  .eq(index)
+                  .children('td:nth-child(4)')
+                  .text(monto_pagar);
+                var input_checked = $('tbody > tr')
+                  .eq(index)
+                  .children('td:nth-child(1)');
+                $(input_checked).find(':checkbox').attr({ checked: 'checked' });
+                a_montos[index].abono = monto_pagar;
+                a_montos[index].saldo = item.deuda - monto_pagar;
+                monto_pagar = 0;
+                a_montos[index].checked = true;
+              }
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
